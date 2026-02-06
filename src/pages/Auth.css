@@ -1,0 +1,219 @@
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #FFF7ED 0%, #FEF3C7 100%);
+    padding: 1rem;
+}
+
+.auth-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0 0 0.5rem 0;
+}
+
+.auth-subtitle {
+    color: #718096;
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-group label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #4A5568;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #E2E8F0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+    background-color: white;
+    /* Ensure selects have bg */
+    appearance: none;
+    /* Custom styling for selects */
+    -webkit-appearance: none;
+}
+
+/* Add custom arrow for selects if needed, or rely on browser default. 
+   For now, let's just make sure they match input height/border. 
+*/
+.form-group select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23A0AEC0'%3e%3cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3e%3c/path%3e%3c/svg%3e");
+    background-position: right 1rem center;
+    background-repeat: no-repeat;
+    background-size: 1em 1em;
+    padding-right: 2.5rem;
+    /* Space for arrow */
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+}
+
+.form-group input:disabled {
+    background: #F7FAFC;
+    cursor: not-allowed;
+}
+
+.auth-error {
+    background: #FED7D7;
+    color: #C53030;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.auth-success {
+    background: #C6F6D5;
+    color: #276749;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+.auth-btn {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.auth-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.auth-btn-primary {
+    background: var(--color-primary);
+    color: white;
+    border: none;
+}
+
+.auth-btn-primary:hover:not(:disabled) {
+    background: #D97706;
+    transform: translateY(-1px);
+}
+
+.auth-btn-secondary {
+    background: #EDF2F7;
+    color: #4A5568;
+    border: none;
+}
+
+.auth-btn-secondary:hover:not(:disabled) {
+    background: #E2E8F0;
+}
+
+.auth-btn-google {
+    background: white;
+    color: #4A5568;
+    border: 2px solid #E2E8F0;
+}
+
+.auth-btn-google:hover:not(:disabled) {
+    background: #F7FAFC;
+    border-color: #CBD5E0;
+}
+
+.auth-btn-text {
+    background: transparent;
+    color: #718096;
+    border: none;
+    font-weight: 500;
+}
+
+.auth-btn-text:hover {
+    color: #4A5568;
+}
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    margin: 1.5rem 0;
+    color: #A0AEC0;
+    font-size: 0.85rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #E2E8F0;
+}
+
+.auth-divider span {
+    padding: 0 1rem;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+    color: #718096;
+    font-size: 0.9rem;
+}
+
+.auth-footer a {
+    color: var(--color-primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+.verify-instructions {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #4A5568;
+    line-height: 1.6;
+}

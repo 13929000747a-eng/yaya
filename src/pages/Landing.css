@@ -1,0 +1,184 @@
+:root {
+    --duck-yellow: #FFD600;
+    --duck-shadow: #E6C200;
+    --duck-beak: #FFA000;
+    --text-dark: #2D3748;
+    --bg-white: #FFFFFF;
+    --bg-soft: #FFFDF5;
+}
+
+body {
+    background-color: var(--bg-white);
+    margin: 0;
+    font-family: 'Fredoka', 'Nunito', system-ui, -apple-system, sans-serif;
+}
+
+.landing-container {
+    width: 100%;
+    min-height: 100vh;
+    background: radial-gradient(circle at 10% 20%, rgba(255, 214, 0, 0.1) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(255, 214, 0, 0.1) 0%, transparent 20%);
+    background-color: var(--bg-soft);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fredoka', system-ui, sans-serif;
+    overflow: hidden;
+    position: relative;
+    padding: 2rem;
+}
+
+.landing-content {
+    z-index: 10;
+    text-align: center;
+    margin-top: -5vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.landing-title {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 3rem;
+    letter-spacing: 0.02em;
+    font-family: 'Fredoka', sans-serif;
+    text-shadow: 3px 3px 0px var(--duck-yellow);
+    opacity: 0;
+    animation: bounceIn 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+    line-height: 1.2;
+}
+
+/* Cute Bounce Animation for Title */
+@keyframes bounceIn {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+
+    70% {
+        transform: scale(0.9);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.duck-parade {
+    display: flex;
+    align-items: flex-end;
+    gap: 2rem;
+    margin-bottom: 4rem;
+    padding: 0 2rem;
+}
+
+/* Duck Animations */
+@keyframes waddle {
+
+    0%,
+    100% {
+        transform: rotate(0deg) translateY(0);
+    }
+
+    25% {
+        transform: rotate(-5deg) translateY(-3px);
+    }
+
+    75% {
+        transform: rotate(5deg) translateY(-3px);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.mom-duck {
+    width: 100px;
+    height: 100px;
+    filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.1));
+    animation: waddle 0.8s infinite ease-in-out;
+}
+
+.baby-duck {
+    width: 60px;
+    height: 60px;
+    filter: drop-shadow(0px 3px 4px rgba(0, 0, 0, 0.1));
+    animation: waddle 0.6s infinite ease-in-out reverse;
+}
+
+.duck-wrapper {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    animation: slideInDuck 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    opacity: 0;
+    transform: translateX(-30px);
+}
+
+@keyframes slideInDuck {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.start-btn {
+    background-color: var(--duck-yellow);
+    color: var(--text-dark);
+    font-size: 1.5rem;
+    font-family: 'Fredoka', sans-serif;
+    font-weight: 600;
+    padding: 1rem 3.5rem;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    /* 3D Button Effect */
+    box-shadow: 0 6px 0 var(--duck-shadow), 0 10px 10px rgba(0, 0, 0, 0.15);
+    transition: all 0.1s;
+    opacity: 0;
+    animation: fadeInUp 1s ease-out 0.8s forwards;
+    margin-top: 4rem;
+    position: relative;
+    top: 0;
+}
+
+.start-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 0 var(--duck-shadow), 0 12px 12px rgba(0, 0, 0, 0.15);
+}
+
+.start-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 var(--duck-shadow), 0 4px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* SVG Styles */
+.duck-body {
+    fill: var(--duck-yellow);
+}
+
+.duck-beak {
+    fill: var(--duck-beak);
+}
+
+.duck-eye {
+    fill: var(--text-dark);
+}

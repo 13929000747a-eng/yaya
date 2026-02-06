@@ -1,0 +1,60 @@
+:root {
+  /* Colors */
+  --color-primary: #FFB800; /* Psyduck Yellow */
+  --color-primary-dark: #E0A200;
+  --color-secondary: #FFF9E6; /* Light Cream Background */
+  --color-text: #2D3748;
+  --color-text-light: #718096;
+  --color-accent: #FF8C00;
+  --color-success: #48BB78;
+  --color-white: #FFFFFF;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* Fonts */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-secondary);
+  color: var(--color-text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  max-width: 480px; /* Force Mobile Width for Demo */
+  margin: 0 auto;
+  background-color: var(--color-white);
+  box-shadow: 0 0 20px rgba(0,0,0,0.05);
+  position: relative;
+  overflow-x: hidden;
+}
+
+h1, h2, h3 {
+  margin: 0;
+  line-height: 1.2;
+}
+
+p {
+  margin: 0 0 1rem 0;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
