@@ -34,7 +34,8 @@ const Level1ReadAloud: React.FC<LevelProps> = ({ onNext }) => {
                 await QuestionService.seedInitialData();
                 data = await QuestionService.getLevel1Questions();
             }
-            setQuestions(data);
+            // Enforce limit of 3 sentences as per requirements
+            setQuestions(data.slice(0, 3));
             setLoading(false);
         };
         loadData();
