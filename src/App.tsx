@@ -7,6 +7,13 @@ import Report from './pages/Report';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { VerifyEmail } from './pages/VerifyEmail';
+import ListeningDecoder from './pages/ListeningDecoder';
+import AdminLayout from './layouts/AdminLayout';
+import ListeningAdmin from './pages/admin/ListeningAdmin';
+import ListeningEditor from './pages/admin/ListeningEditor';
+import QuestionBankAdmin from './pages/admin/QuestionBankAdmin';
+import QuestionBankTopicAdmin from './pages/admin/QuestionBankTopicAdmin';
+import QuestionBankQuestionAdmin from './pages/admin/QuestionBankQuestionAdmin';
 
 // Redirect component for authenticated users
 const AuthRedirect: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -75,12 +82,16 @@ const HomeRedirect: React.FC = () => {
     return <Navigate to="/assessment" replace />;
   }
 
-  // Returning users see landing (could be dashboard in future)
-  return <Landing />;
+  // Returning users go to Dashboard
+  return <Navigate to="/dashboard" replace />;
 };
 
 import MainLayout from './components/MainLayout';
 import Profile from './pages/Profile';
+
+import Dashboard from './pages/Dashboard';
+import TopicStudio from './pages/TopicStudio';
+import ImportTool from './pages/admin/ImportTool';
 
 function AppRoutes() {
   return (
@@ -91,6 +102,22 @@ function AppRoutes() {
       <Route path="/verify-email" element={<VerifyEmail />} />
 
       {/* Protected Routes with Layout */}
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <Dashboard />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/topic/:topicId" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <TopicStudio />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
       <Route path="/assessment" element={
         <ProtectedRoute>
           <MainLayout>
@@ -114,6 +141,32 @@ function AppRoutes() {
           </MainLayout>
         </ProtectedRoute>
       } />
+
+      <Route path="/listening-decoder" element={
+        <ProtectedRoute>
+          <MainLayout>
+            <ListeningDecoder />
+          </MainLayout>
+        </ProtectedRoute>
+      } />
+
+      {/* Admin Routes */}
+      <Route path="/admin" element={
+        <ProtectedRoute>
+          <AdminLayout />
+        </ProtectedRoute>
+      }>
+        <Route index element={<Navigate to="listening" replace />} />
+        <Route path="listening" element={<ListeningAdmin />} />
+        <Route path="listening/new" element={<ListeningEditor />} />
+        <Route path="listening/:id" element={<ListeningEditor />} />
+
+        {/* Question Bank AdminRoutes */}
+        <Route path="question-bank" element={<QuestionBankAdmin />} />
+        <Route path="question-bank/:seasonId" element={<QuestionBankTopicAdmin />} />
+        <Route path="question-bank/topic/:topicId" element={<QuestionBankQuestionAdmin />} />
+        <Route path="import" element={<ImportTool />} />
+      </Route>
     </Routes>
   );
 }

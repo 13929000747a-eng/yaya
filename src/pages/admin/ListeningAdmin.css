@@ -1,0 +1,130 @@
+.listening-admin-page {
+    /* container styles inherited */
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.page-header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.primary-btn,
+.secondary-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+}
+
+.primary-btn {
+    background: #f59e0b;
+    color: white;
+}
+
+.primary-btn:hover {
+    background: #d97706;
+}
+
+.secondary-btn {
+    background: white;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+}
+
+.secondary-btn:hover {
+    background: #f1f5f9;
+}
+
+.content-area {
+    background: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    overflow: hidden;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.admin-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.admin-table tr:hover {
+    background: #f8fafc;
+}
+
+.badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge.level-1 {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge.level-2 {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.badge.level-3 {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0.25rem;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.25rem;
+    border: 1px solid #cbd5e1;
+    background: white;
+    font-size: 0.875rem;
+    cursor: pointer;
+    margin-right: 0.5rem;
+}
+
+.btn-sm.dest-btn {
+    color: #ef4444;
+    border-color: #fca5a5;
+}
+
+.text-warning {
+    color: #f59e0b;
+    font-weight: 600;
+    font-size: 0.875rem;
+}

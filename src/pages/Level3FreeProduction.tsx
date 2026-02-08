@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MicrophoneButton } from '../components/MicrophoneButton';
 import confetti from 'canvas-confetti';
-import { AudioRecorder } from '../utils/audioRecorder';
-import { IatService } from '../utils/iatService';
+import { BrowserSpeechService } from '../utils/browserSpeechService';
 import { DeepSeekService } from '../services/deepSeekService';
 import { QuestionService, type Question } from '../services/questionService';
 import { AssessmentService } from '../services/assessmentService';
 import { useAuth } from '../contexts/AuthContext';
+import { ArrowRight } from 'lucide-react';
 
 interface LevelProps {
     onNext: () => void;
 }
 
-type Stage = 'loading' | 'part2_prep' | 'part2_recording' | 'part3_intro' | 'part3_recording' | 'processing' | 'completed';
+type Stage = 'loading' | 'part2_prep' | 'part2_recording' | 'part2_review' | 'part3_intro' | 'part3_recording' | 'part3_review' | 'processing' | 'completed';
 
 const Level3FreeProduction: React.FC<LevelProps> = ({ onNext }) => {
     const { user } = useAuth();
@@ -27,17 +27,21 @@ const Level3FreeProduction: React.FC<LevelProps> = ({ onNext }) => {
     const [timeLeft, setTimeLeft] = useState(60); // Prep time or recording limit
     const [transcript, setTranscript] = useState("");
     const [micState, setMicState] = useState<'idle' | 'recording' | 'processing'>('idle');
-    const [feedback, setFeedback] = useState<any>(null);
+    const [feedback, setFeedback] = useState<any>(null); // For intermediate feedback
 
     // Refs
-    const recorderRef = useRef<AudioRecorder | null>(null);
-    const iatServiceRef = useRef<IatService | null>(null);
+    // const recorderRef = useRef<AudioRecorder | null>(null); // REMOVED
+    const speechServiceRef = useRef<BrowserSpeechService | null>(null);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
     const transcriptRef = useRef("");
 
     useEffect(() => {
         loadQuestions();
-        return () => stopAll();
+        speechServiceRef.current = new BrowserSpeechService();
+        return () => {
+            stopTimer();
+            if (speechServiceRef.current) speechServiceRef.current.stop();
+        };
     }, []);
 
     // Timer Logic
@@ -91,29 +95,19 @@ const Level3FreeProduction: React.FC<LevelProps> = ({ onNext }) => {
             transcriptRef.current = "";
             setMicState('recording');
 
-            iatServiceRef.current = new IatService();
-            iatServiceRef.current.connect(
-                (text) => {
-                    setTranscript(text);
-                    transcriptRef.current = text;
-                },
-                (err) => console.error("IAT Error:", err)
-            );
-
-            recorderRef.current = new AudioRecorder();
-            await recorderRef.current.start((data) => {
-                if (iatServiceRef.current) iatServiceRef.current.sendAudio(data);
-            });
+            if (speechServiceRef.current) {
+                speechServiceRef.current.start(
+                    (text) => {
+                        setTranscript(text);
+                        transcriptRef.current = text;
+                    },
+                    (err) => console.error("Speech Error:", err)
+                );
+            }
         } catch (e) {
             console.error("Mic Error:", e);
             setMicState('idle');
         }
-    };
-
-    const stopAll = () => {
-        stopTimer();
-        if (recorderRef.current) recorderRef.current.stop();
-        if (iatServiceRef.current) iatServiceRef.current.stop();
     };
 
     // --- Part 2 Logic ---
@@ -124,8 +118,9 @@ const Level3FreeProduction: React.FC<LevelProps> = ({ onNext }) => {
     };
 
     const stopPart2Recording = async () => {
-        stopAll();
+        if (speechServiceRef.current) speechServiceRef.current.stop();
         setMicState('processing');
+        setStage('processing');
 
         // Evaluate Part 2
         const result = await DeepSeekService.evaluate(
@@ -135,13 +130,16 @@ const Level3FreeProduction: React.FC<LevelProps> = ({ onNext }) => {
             'Hard'
         );
 
-        // Save intermediate result? For now just log
         console.log("Part 2 Result:", result);
-
-        // Move to Part 3
-        setStage('part3_intro');
+        setFeedback(result);
+        setStage('part2_review'); // New Review Stage
         setMicState('idle');
+    };
+
+    const finishPart2Review = () => {
+        setFeedback(null);
         setTranscript("");
+        setStage('part3_intro');
     };
 
     // --- Part 3 Logic ---
@@ -151,8 +149,9 @@ const Level3FreeProduction: React.FC<LevelProps> = ({ onNext }) => {
     };
 
     const nextPart3 = async () => {
-        stopAll();
+        if (speechServiceRef.current) speechServiceRef.current.stop();
         setMicState('processing');
+        setStage('processing');
 
         const currentQ = part3Questions[currentPart3Index];
         const result = await DeepSeekService.evaluate(
@@ -162,12 +161,18 @@ const Level3FreeProduction: React.FC<LevelProps> = ({ onNext }) => {
             'Hard'
         );
         console.log("Part 3 Q1 Result:", result);
+        setFeedback(result);
+        setStage('part3_review'); // New Review Stage
+        setMicState('idle');
+    };
+
+    const finishPart3Review = () => {
+        setFeedback(null);
+        setTranscript("");
 
         if (currentPart3Index < part3Questions.length - 1) {
             setCurrentPart3Index(prev => prev + 1);
-            setStage('part3_recording'); // Reset for next Q
-            // Small delay to restart recording cleanly?
-            setTimeout(() => startRecording(), 500);
+            setStage('part3_intro'); // Go to next intro
         } else {
             finishAssessment();
         }
@@ -179,7 +184,8 @@ const Level3FreeProduction: React.FC<LevelProps> = ({ onNext }) => {
         if (user?.uid) {
             await AssessmentService.saveLevel(user.uid, 6.0); // Mock final score for now
         }
-        setTimeout(onNext, 4000); // Auto navigate
+        // No auto navigate from here? Or allow user to click 'Return Home'
+        setTimeout(onNext, 4000);
     };
 
     // --- Render Helpers ---
@@ -234,6 +240,7 @@ const Level3FreeProduction: React.FC<LevelProps> = ({ onNext }) => {
                     Topic: {part2Question?.topic}
                 </div>
                 <MicrophoneButton state="recording" onClick={stopPart2Recording} />
+                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#CBD5E0' }}>⚡ Native Speed Engine</div>
                 <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: '#A0AEC0' }}>
                     Click mic to finish early
                 </div>
@@ -242,6 +249,31 @@ const Level3FreeProduction: React.FC<LevelProps> = ({ onNext }) => {
                 </div>
             </div>
         );
+    }
+
+    // Part 2 Review Screen
+    if (stage === 'part2_review') {
+        return (
+            <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+                <h2 style={{ color: 'var(--color-primary)', marginBottom: '1rem' }}>📊 Part 2 Feedback</h2>
+
+                <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)', marginBottom: '2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>Overall Score: {feedback?.scores?.Overall}</div>
+                    </div>
+                    <div style={{ background: '#F0FFF4', padding: '1rem', borderRadius: '8px', color: '#276749' }}>
+                        {feedback?.feedback_cn}
+                    </div>
+                </div>
+
+                <button
+                    onClick={finishPart2Review}
+                    style={{ width: '100%', padding: '1rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                    Continue to Part 3 <ArrowRight />
+                </button>
+            </div>
+        )
     }
 
     if (stage === 'part3_intro' || stage === 'part3_recording') {
@@ -266,6 +298,7 @@ const Level3FreeProduction: React.FC<LevelProps> = ({ onNext }) => {
                 ) : (
                     <>
                         <MicrophoneButton state="recording" onClick={nextPart3} />
+                        <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#CBD5E0' }}>⚡ Native Speed Engine</div>
                         <div style={{ marginTop: '2rem', padding: '1rem', background: '#F7FAFC', borderRadius: '8px', width: '80%', minHeight: '60px' }}>
                             {transcript}
                         </div>
@@ -273,6 +306,34 @@ const Level3FreeProduction: React.FC<LevelProps> = ({ onNext }) => {
                 )}
             </div>
         );
+    }
+
+    // Part 3 Review Screen
+    if (stage === 'part3_review') {
+        return (
+            <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+                <h2 style={{ color: 'var(--color-primary)', marginBottom: '1rem' }}>📊 Part 3 Feedback</h2>
+
+                <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', boxShadow: 'var(--shadow-md)', marginBottom: '2rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                        <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>Overall Score: {feedback?.scores?.Overall}</div>
+                    </div>
+                    <div style={{ background: '#F0FFF4', padding: '1rem', borderRadius: '8px', color: '#276749' }}>
+                        {feedback?.feedback_cn}
+                    </div>
+                    <div style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#718096' }}>
+                        Logic Tip: {feedback?.logic_correction || "Keep points relevant."}
+                    </div>
+                </div>
+
+                <button
+                    onClick={finishPart3Review}
+                    style={{ width: '100%', padding: '1rem', background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                >
+                    Next Question <ArrowRight />
+                </button>
+            </div>
+        )
     }
 
     if (stage === 'completed') {

@@ -1,0 +1,123 @@
+.dashboard-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem;
+    font-family: 'Inter', sans-serif;
+    color: #37352f;
+    /* Notion-like black */
+}
+
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+.dashboard-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.season-selector {
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+    color: #666;
+}
+
+.part-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.part-tab {
+    padding: 0.75rem 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #999;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+}
+
+.part-tab.active {
+    color: #37352f;
+    border-bottom-color: #37352f;
+}
+
+.topic-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.topic-card {
+    background: white;
+    border: 1px solid #f0f0f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: box-shadow 0.1s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+}
+
+.topic-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-color: #e0e0e0;
+}
+
+.topic-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.topic-meta {
+    font-size: 0.85rem;
+    color: #999;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-badge {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e0e0e0;
+    /* Default: Gray */
+}
+
+/* Status Colors (Future use) */
+.status-new {
+    background: #3b82f6;
+}
+
+.status-learning {
+    background: #f59e0b;
+}
+
+.status-mastered {
+    background: #10b981;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem;
+    color: #999;
+    background: #fcfcfc;
+    border-radius: 8px;
+}

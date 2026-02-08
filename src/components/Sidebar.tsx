@@ -56,6 +56,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     </button>
 
                     <button
+                        className={`nav-item ${location.pathname === '/listening-decoder' ? 'active' : ''}`}
+                        onClick={() => handleNavigate('/listening-decoder')}
+                    >
+                        <span className="nav-icon">🎧</span>
+                        <span className="nav-text">辨音训练</span>
+                    </button>
+
+                    <button
                         className={`nav-item ${location.pathname === '/profile' ? 'active' : ''}`}
                         onClick={() => handleNavigate('/profile')}
                     >

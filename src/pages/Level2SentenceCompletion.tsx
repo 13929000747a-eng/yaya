@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MicrophoneButton } from '../components/MicrophoneButton';
 import confetti from 'canvas-confetti';
-import { IatService } from '../utils/iatService';
-import { AudioRecorder } from '../utils/audioRecorder';
+import { BrowserSpeechService } from '../utils/browserSpeechService';
 import { DeepSeekService, type EvaluationResult } from '../services/deepSeekService';
 import { QuestionService, type Question } from '../services/questionService';
 import { AssessmentService } from '../services/assessmentService';
 import { useAuth } from '../contexts/AuthContext';
+import { ArrowRight } from 'lucide-react';
 
 interface LevelProps {
     onNext: () => void;
@@ -20,13 +20,12 @@ const Level2SentenceCompletion: React.FC<LevelProps> = ({ onNext }) => {
     const [transcript, setTranscript] = useState("");
     const [feedbackData, setFeedbackData] = useState<EvaluationResult | null>(null);
     const [loading, setLoading] = useState(true);
-    const [volume, setVolume] = useState(0);
+    // const [volume, setVolume] = useState(0); // Web Speech API doesn't provide easy volume meter
 
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
     // Services
-    const iatServiceRef = useRef<IatService | null>(null);
-    const recorderRef = useRef<AudioRecorder | null>(null);
+    const speechServiceRef = useRef<BrowserSpeechService | null>(null);
     const transcriptRef = useRef("");
     const scoresRef = useRef<number[]>([]);
 
@@ -50,6 +49,10 @@ const Level2SentenceCompletion: React.FC<LevelProps> = ({ onNext }) => {
                     setErrorMsg("No questions found after init. Possible DB connection or permission issue.");
                 }
                 setQuestions(data);
+
+                // Initialize Speech Service
+                speechServiceRef.current = new BrowserSpeechService();
+
             } catch (err) {
                 console.error("Failed to load questions", err);
                 setErrorMsg("Load Error: " + (err as any).message);
@@ -57,44 +60,35 @@ const Level2SentenceCompletion: React.FC<LevelProps> = ({ onNext }) => {
             setLoading(false);
         };
         init();
-        return () => stopAudioRecorder();
+        return () => {
+            if (speechServiceRef.current) speechServiceRef.current.stop();
+        };
     }, []);
 
     const currentQuestion = questions[currentStep];
 
-    const startAudioRecorder = async () => {
+    const startRecording = async () => {
         try {
-            console.log('[L2 DEBUG] Starting recording...');
+            console.log('[L2 DEBUG] Starting Native Recording...');
             setFeedbackData(null);
             setTranscript("");
             transcriptRef.current = "";
             setState('recording');
 
-            iatServiceRef.current = new IatService();
-            iatServiceRef.current.connect(
-                (text, isLast) => {
-                    console.log('[L2 DEBUG] IAT received:', JSON.stringify(text), 'isLast:', isLast);
-                    setTranscript(text);
-                    transcriptRef.current = text;
-                    if (isLast) handleStop();
-                },
-                (err) => console.error('[L2 DEBUG] IAT Error:', err)
-            );
-
-            recorderRef.current = new AudioRecorder();
-            await recorderRef.current.start(
-                (data) => {
-                    if (iatServiceRef.current) {
-                        // console.log('[L2 DEBUG] Sending audio chunk, size:', data.byteLength);
-                        iatServiceRef.current.sendAudio(data);
-                    }
-                },
-                (rms) => {
-                    // Update volume for visual feedback
-                    setVolume(rms);
-                }
-            );
-            console.log('[L2 DEBUG] Recording started successfully');
+            if (speechServiceRef.current) {
+                speechServiceRef.current.start(
+                    (text, isLast) => {
+                        console.log('[L2 DEBUG] Speech:', text);
+                        setTranscript(text);
+                        transcriptRef.current = text;
+                        // Web Speech doesn't usually give 'isLast' in the same way IAT does for VAD
+                        // We rely on manual stop or user silence (if we implemented custom VAD)
+                        // For now, manual stop + maybe basic silence check in service? 
+                        // The Browser API stops automatically on silence usually.
+                    },
+                    (err) => console.error('[L2 DEBUG] Speech Error:', err)
+                );
+            }
 
         } catch (e) {
             console.error('[L2 DEBUG] Failed to start recording:', e);
@@ -102,69 +96,54 @@ const Level2SentenceCompletion: React.FC<LevelProps> = ({ onNext }) => {
         }
     };
 
-    const stopAudioRecorder = () => {
-        if (recorderRef.current) {
-            recorderRef.current.stop();
-            recorderRef.current = null;
+    const handleStop = async () => {
+        if (state !== 'recording') return;
+
+        console.log('[L2 DEBUG] Stopping...');
+        setState('processing');
+
+        if (speechServiceRef.current) {
+            speechServiceRef.current.stop();
         }
-        if (iatServiceRef.current) {
-            iatServiceRef.current.stop();
+
+        // Native API result is instant.
+        const finalTranscript = transcriptRef.current;
+        console.log('[L2 DEBUG] Final Transcript:', finalTranscript);
+
+        // Evaluate
+        const result = await DeepSeekService.evaluate(
+            'sentence_completion',
+            currentQuestion.template || currentQuestion.text,
+            finalTranscript,
+            currentQuestion.level
+        );
+
+        setFeedbackData(result);
+        setState('idle');
+
+        // Record Score
+        const score = result.scores?.Overall || 0;
+        scoresRef.current.push(score);
+
+        if (score >= 6.0) {
+            confetti({ particleCount: 50, spread: 60 });
         }
+
+        // NO AUTO JUMP - Wait for user to click Next
     };
 
-    const handleStop = () => {
-        console.log('[L2 DEBUG] handleStop called, current state:', state);
-        if (state !== 'recording') {
-            console.log('[L2 DEBUG] handleStop aborted, not in recording state');
-            return;
+    const handleNextQuestion = async () => {
+        if (currentStep < questions.length - 1) {
+            setCurrentStep(s => s + 1);
+            setTranscript("");
+            setFeedbackData(null);
+        } else {
+            // Finish
+            const allScores = scoresRef.current;
+            const avg = allScores.length ? allScores.reduce((a, b) => a + b, 0) / allScores.length : 0;
+            if (user?.uid) await AssessmentService.saveLevel(user.uid, avg);
+            onNext();
         }
-
-        setState('processing');
-        stopAudioRecorder();
-
-        setTimeout(async () => {
-            if (!currentQuestion) return;
-
-            // With WPGS, transcript is real-time. We can evaluate immediately.
-            const finalTranscript = transcriptRef.current;
-            console.log('[L2 DEBUG] Final Transcript:', finalTranscript);
-
-            // Updated Call Signature
-            const result = await DeepSeekService.evaluate(
-                'sentence_completion',
-                currentQuestion.template || currentQuestion.text,
-                finalTranscript,
-                currentQuestion.level
-            );
-
-            setFeedbackData(result);
-            setState('idle');
-
-            const score = result.scores?.Overall || 0;
-
-            // Always record score
-            scoresRef.current.push(score);
-
-            // Confetti only for good scores
-            if (score >= 6.0) {
-                confetti({ particleCount: 50, spread: 60 });
-            }
-
-            // Always proceed after delay
-            setTimeout(async () => {
-                if (currentStep < questions.length - 1) {
-                    setCurrentStep(s => s + 1);
-                    setTranscript("");
-                    setFeedbackData(null);
-                } else {
-                    // Finish
-                    const allScores = scoresRef.current;
-                    const avg = allScores.length ? allScores.reduce((a, b) => a + b, 0) / allScores.length : 0;
-                    if (user?.uid) await AssessmentService.saveLevel(user.uid, avg);
-                    onNext();
-                }
-            }, 4000);
-        }, 2000);
     };
 
     const getRenderedSentence = () => {
@@ -231,9 +210,11 @@ const Level2SentenceCompletion: React.FC<LevelProps> = ({ onNext }) => {
 
             <MicrophoneButton
                 state={state}
-                onClick={() => state === 'idle' ? startAudioRecorder() : handleStop()}
-                volume={volume}
+                onClick={() => state === 'idle' ? startRecording() : handleStop()}
+                volume={0} // No volume meter for Web Speech API
             />
+
+            {state === 'recording' && <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: '#CBD5E0' }}>⚡ Native Speed Engine</div>}
 
             {feedbackData && (
                 <div style={{ marginTop: '2rem', width: '100%', background: 'white', padding: '1rem', borderRadius: '8px', boxShadow: 'var(--shadow-sm)' }}>
@@ -242,7 +223,7 @@ const Level2SentenceCompletion: React.FC<LevelProps> = ({ onNext }) => {
                             Score: {feedbackData.scores.Overall}
                         </div>
                         <div style={{ color: '#718096' }}>
-                            {/* Assessment Mode: No Pass Threshold Text */}
+                            {/* Manual Next Button */}
                         </div>
                     </div>
 
@@ -251,10 +232,30 @@ const Level2SentenceCompletion: React.FC<LevelProps> = ({ onNext }) => {
                     </div>
 
                     {feedbackData.improved_sample && (
-                        <div style={{ fontSize: '0.9rem', color: '#4A5568' }}>
+                        <div style={{ fontSize: '0.9rem', color: '#4A5568', marginBottom: '1rem' }}>
                             <strong>Try saying:</strong> "{feedbackData.improved_sample}"
                         </div>
                     )}
+
+                    <button
+                        onClick={handleNextQuestion}
+                        style={{
+                            width: '100%',
+                            padding: '12px',
+                            background: 'var(--color-primary)',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '1rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px'
+                        }}
+                    >
+                        Next Question <ArrowRight size={16} />
+                    </button>
                 </div>
             )}
         </div>

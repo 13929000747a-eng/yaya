@@ -10,6 +10,11 @@ interface UserProfileData {
     targetScore: string;
     examDate: string;
     occupation: string;
+    hometown?: string;
+    major?: string; // If student
+    jobTitle?: string; // If worker
+    hobbies?: string;
+    personalityTags?: string[];
     currentLevel?: string; // Read-only from system
 }
 
@@ -22,7 +27,12 @@ const Profile: React.FC = () => {
         age: '',
         targetScore: '',
         examDate: '',
-        occupation: ''
+        occupation: '',
+        hometown: '',
+        major: '',
+        jobTitle: '',
+        hobbies: '',
+        personalityTags: []
     });
     const [currentLevel, setCurrentLevel] = useState<string>('未测评');
 
@@ -47,7 +57,12 @@ const Profile: React.FC = () => {
                         age: data.age || '',
                         targetScore: data.targetScore || '',
                         examDate: data.examDate || '',
-                        occupation: data.occupation || ''
+                        occupation: data.occupation || '',
+                        hometown: data.hometown || '',
+                        major: data.major || '',
+                        jobTitle: data.jobTitle || '',
+                        hobbies: data.hobbies || '',
+                        personalityTags: data.personalityTags || []
                     });
                     // Logic to determine level based on completedAssessment or stored score
                     if (data.level) {
@@ -97,8 +112,27 @@ const Profile: React.FC = () => {
         setMessage({ type: 'success', text: '激活码兑换功能开发中...' });
     };
 
+    const toggleTag = (tag: string) => {
+        setProfileData(prev => {
+            const tags = prev.personalityTags || [];
+            if (tags.includes(tag)) {
+                return { ...prev, personalityTags: tags.filter(t => t !== tag) };
+            } else {
+                if (tags.length >= 3) return prev; // Max 3 tags
+                return { ...prev, personalityTags: [...tags, tag] };
+            }
+        });
+    };
+
+    const PERSONALITY_OPTIONS = [
+        "Introvert (内向)", "Extrovert (外向)",
+        "Creative (有创意)", "Logical (逻辑强)",
+        "Adventurous (爱冒险)", "Calm (沉稳)",
+        "Humorous (幽默)", "Ambitious (有野心)"
+    ];
+
     return (
-        <div style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
             <h1 style={{ fontFamily: 'Fredoka', color: 'var(--color-text)', marginBottom: '2rem' }}>个人设置</h1>
 
             {message && (
@@ -120,11 +154,13 @@ const Profile: React.FC = () => {
                 </h2>
                 <div style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #eee' }}>
                     <label>邮箱账号</label>
-                    <div>{user?.email}</div>
+                    <div style={{ color: '#666', marginTop: '0.2rem' }}>{user?.email}</div>
                 </div>
 
                 <form onSubmit={handleSaveProfile}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                    {/* Fundamental Info */}
+                    <h3 style={{ fontSize: '1rem', color: '#888', marginBottom: '1rem', borderLeft: '3px solid var(--color-primary)', paddingLeft: '0.5rem' }}>基础信息 (用于考务)</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '2rem' }}>
                         <div className="form-group">
                             <label>性别</label>
                             <select
@@ -134,7 +170,6 @@ const Profile: React.FC = () => {
                                 <option value="">请选择</option>
                                 <option value="male">男</option>
                                 <option value="female">女</option>
-                                <option value="secret">保密</option>
                             </select>
                         </div>
                         <div className="form-group">
@@ -146,20 +181,6 @@ const Profile: React.FC = () => {
                                 onChange={(e) => setProfileData({ ...profileData, age: e.target.value })}
                             />
                         </div>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginTop: '1rem' }}>
-                        <div className="form-group">
-                            <label>职业状态</label>
-                            <select
-                                value={profileData.occupation}
-                                onChange={(e) => setProfileData({ ...profileData, occupation: e.target.value })}
-                            >
-                                <option value="">请选择</option>
-                                <option value="student">学生</option>
-                                <option value="worker">在职</option>
-                            </select>
-                        </div>
                         <div className="form-group">
                             <label>目标分数</label>
                             <select
@@ -170,28 +191,105 @@ const Profile: React.FC = () => {
                                 <option value="5.0">5.0</option>
                                 <option value="5.5">5.5</option>
                                 <option value="6.0">6.0</option>
-                                <option value="6.5">6.5</option>
+                                <option value="6.5">6.5 (推荐)</option>
                                 <option value="7.0">7.0 +</option>
                             </select>
                         </div>
+                        <div className="form-group">
+                            <label>考试时间</label>
+                            <input
+                                type="date"
+                                value={profileData.examDate}
+                                onChange={(e) => setProfileData({ ...profileData, examDate: e.target.value })}
+                            />
+                        </div>
                     </div>
 
-                    <div className="form-group" style={{ marginTop: '1rem' }}>
-                        <label>考试时间</label>
-                        <input
-                            type="date"
-                            value={profileData.examDate}
-                            onChange={(e) => setProfileData({ ...profileData, examDate: e.target.value })}
-                        />
-                    </div>
+                    {/* AI Personalization Info */}
+                    <h3 style={{ fontSize: '1rem', color: '#888', marginBottom: '1rem', borderLeft: '3px solid #9f7aea', paddingLeft: '0.5rem' }}>AI 定制信息 (用于生成高分答案 ✨)</h3>
 
-                    <div className="form-group">
-                        <label>目前水平 (模考自动同步)</label>
+                    <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                        <label>家乡 (Hometown) <span style={{ fontSize: '0.8rem', color: '#999' }}>- 必填</span></label>
                         <input
                             type="text"
-                            value={currentLevel}
-                            disabled
+                            placeholder="例如: Chengdu, China / Shijiazhuang, Hebei"
+                            value={profileData.hometown}
+                            onChange={(e) => setProfileData({ ...profileData, hometown: e.target.value })}
                         />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
+                        <div className="form-group">
+                            <label>当前身份</label>
+                            <select
+                                value={profileData.occupation}
+                                onChange={(e) => setProfileData({ ...profileData, occupation: e.target.value })}
+                            >
+                                <option value="">请选择</option>
+                                <option value="student">学生</option>
+                                <option value="worker">在职</option>
+                            </select>
+                        </div>
+
+                        {profileData.occupation === 'student' && (
+                            <div className="form-group">
+                                <label>专业 (Major)</label>
+                                <input
+                                    type="text"
+                                    placeholder="例如: Computer Science"
+                                    value={profileData.major}
+                                    onChange={(e) => setProfileData({ ...profileData, major: e.target.value })}
+                                />
+                            </div>
+                        )}
+
+                        {profileData.occupation === 'worker' && (
+                            <div className="form-group">
+                                <label>职位/行业 (Job Title)</label>
+                                <input
+                                    type="text"
+                                    placeholder="例如: Software Engineer"
+                                    value={profileData.jobTitle}
+                                    onChange={(e) => setProfileData({ ...profileData, jobTitle: e.target.value })}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                        <label>兴趣爱好 (Hobbies)</label>
+                        <textarea
+                            rows={2}
+                            placeholder="例如: Traveling, Photography, Playing Guitar, Hiking..."
+                            value={profileData.hobbies}
+                            onChange={(e) => setProfileData({ ...profileData, hobbies: e.target.value })}
+                            style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #ddd' }}
+                        />
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: '1rem' }}>
+                        <label>性格关键词 (Personality) <span style={{ fontSize: '0.8rem', color: '#999' }}>- 最多选3个</span></label>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
+                            {PERSONALITY_OPTIONS.map(tag => (
+                                <button
+                                    key={tag}
+                                    type="button"
+                                    onClick={() => toggleTag(tag)}
+                                    style={{
+                                        padding: '0.4rem 0.8rem',
+                                        borderRadius: '20px',
+                                        border: profileData.personalityTags?.includes(tag) ? '1px solid var(--color-primary)' : '1px solid #eee',
+                                        background: profileData.personalityTags?.includes(tag) ? '#fff7ed' : '#f9f9f9',
+                                        color: profileData.personalityTags?.includes(tag) ? 'var(--color-primary)' : '#666',
+                                        cursor: 'pointer',
+                                        fontSize: '0.9rem',
+                                        transition: 'all 0.2s'
+                                    }}
+                                >
+                                    {tag}
+                                </button>
+                            ))}
+                        </div>
                     </div>
 
                     <button type="submit" className="auth-btn auth-btn-primary" disabled={loading} style={{ marginTop: '1.5rem' }}>

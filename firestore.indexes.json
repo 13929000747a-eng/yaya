@@ -1,0 +1,37 @@
+{
+    "indexes": [
+        {
+            "collectionGroup": "question_topics",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "seasonId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "part",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "order",
+                    "order": "ASCENDING"
+                }
+            ]
+        },
+        {
+            "collectionGroup": "question_bank_questions",
+            "queryScope": "COLLECTION",
+            "fields": [
+                {
+                    "fieldPath": "topicId",
+                    "order": "ASCENDING"
+                },
+                {
+                    "fieldPath": "order",
+                    "order": "ASCENDING"
+                }
+            ]
+        }
+    ],
+    "fieldOverrides": []
+}
