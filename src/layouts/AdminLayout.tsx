@@ -38,6 +38,9 @@ const AdminLayout: React.FC = () => {
                     <NavLink to="/admin/question-bank" className={({ isActive }) => isActive ? 'active' : ''}>
                         📚 Question Bank
                     </NavLink>
+                    <NavLink to="/admin/dev-logs" className={({ isActive }) => isActive ? 'active' : ''}>
+                        🛠️ Dev Logs
+                    </NavLink>
                     <div className="divider"></div>
                     <button onClick={logout} className="logout-btn">Logout</button>
                     <button onClick={() => navigate('/')} className="back-home-btn">← Back to App</button>

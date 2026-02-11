@@ -14,6 +14,7 @@ import ListeningEditor from './pages/admin/ListeningEditor';
 import QuestionBankAdmin from './pages/admin/QuestionBankAdmin';
 import QuestionBankTopicAdmin from './pages/admin/QuestionBankTopicAdmin';
 import QuestionBankQuestionAdmin from './pages/admin/QuestionBankQuestionAdmin';
+import DevLogsAdmin from './pages/admin/DevLogsAdmin';
 
 // Redirect component for authenticated users
 const AuthRedirect: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -165,7 +166,9 @@ function AppRoutes() {
         <Route path="question-bank" element={<QuestionBankAdmin />} />
         <Route path="question-bank/:seasonId" element={<QuestionBankTopicAdmin />} />
         <Route path="question-bank/topic/:topicId" element={<QuestionBankQuestionAdmin />} />
+        <Route path="question-bank/topic/:topicId" element={<QuestionBankQuestionAdmin />} />
         <Route path="import" element={<ImportTool />} />
+        <Route path="dev-logs" element={<DevLogsAdmin />} />
       </Route>
     </Routes>
   );
